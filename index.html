@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fruit Recommendation</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 500px;
+      background-color: white;
+      margin: 40px auto;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    label {
+      margin-top: 15px;
+      display: block;
+      color: #555;
+    }
+
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 20px;
+      padding: 12px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #218838;
+    }
+
+    .result {
+      margin-top: 25px;
+    }
+
+    .result ul {
+      padding-left: 18px;
+    }
+
+    .result li {
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+
+    .error {
+      color: red;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Fruit Recommendation System</h2>
+
+    <label for="age">Age:</label>
+    <input type="number" id="age" min="1" max="120" placeholder="Enter your age" />
+
+    <label for="goal">Health Goal:</label>
+    <select id="goal">
+      <option disabled selected>Select health goal</option>
+      <option value="Weight Loss">Weight Loss</option>
+      <option value="Immunity">Immunity</option>
+      <option value="Energy">Energy</option>
+    </select>
+
+    <label for="diabetic">Diabetic:</label>
+    <select id="diabetic">
+      <option disabled selected>Are you diabetic?</option>
+      <option value="Yes">Yes</option>
+      <option value="No">No</option>
+    </select>
+
+    <button onclick="getRecommendations()">Get Recommendations</button>
+
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    async function getRecommendations() {
+      const age = document.getElementById('age').value;
+      const goal = document.getElementById('goal').value;
+      const diabetic = document.getElementById('diabetic').value;
+      const resultBox = document.getElementById("result");
+
+      resultBox.innerHTML = "Loading...";
+
+      if (!age || !goal || !diabetic) {
+        resultBox.innerHTML = "<p class='error'>Please fill out all fields.</p>";
+        return;
+      }
+
+      try {
+        const response = await fetch("http://localhost:5000/recommend", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ age: age, health_goal: goal, diabetic: diabetic })
+        });
+
+        const data = await response.json();
+
+        if (data.recommendations && data.recommendations.length > 0) {
+          resultBox.innerHTML = "<h4>Top Fruit Recommendations:</h4><ul>" +
+            data.recommendations.map(fruit => `
+              <li>
+                <strong>${fruit.fruit}</strong><br/>
+                Sugar: ${fruit.sugar}g<br/>
+                Calories: ${fruit.calories}<br/>
+                Protein: ${fruit.protein}g
+              </li>
+            `).join("") + "</ul>";
+        } else {
+          resultBox.innerHTML = "<p class='error'>No suitable fruits found.</p>";
+        }
+
+      } catch (err) {
+        console.error(err);
+        resultBox.innerHTML = "<p class='error'>Error connecting to the server.</p>";
+      }
+    }
+  </script>
+</body>
+</html>
